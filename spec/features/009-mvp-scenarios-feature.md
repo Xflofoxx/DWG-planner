@@ -1,6 +1,6 @@
 Title: MVP Scenarios – DWG Planner
-Slug: mvp-scenarios-dwg-planner
-Intent: Fornire scenari end-to-end per MVP per validare requisiti e flussi
+Slug: mvp-scenarios-feature
+Intent: Scenari end-to-end per MVP per validare requisiti e flussi
 
 Scenario E2E MVP
 - Carica DWG per progetto
