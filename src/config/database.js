@@ -29,6 +29,7 @@ db.serialize(() => {
   db.run(
     `CREATE TABLE IF NOT EXISTS milestones (id TEXT PRIMARY KEY, project_id TEXT, name TEXT NOT NULL, description TEXT, date DATE, status TEXT DEFAULT 'pending', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (project_id) REFERENCES projects(id))`,
   );
+
   db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_assigned ON tasks(assigned_to)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)`);
@@ -44,6 +45,26 @@ db.serialize(() => {
   db.run(
     `CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id)`,
   );
+
+  const addColumnSafe = (table, column, definition) => {
+    db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`, (err) => {
+      if (err && !err.message.includes("duplicate column name")) {
+        console.error(`Error adding ${column} to ${table}:`, err.message);
+      }
+    });
+  };
+
+  addColumnSafe("tasks", "start_date", "DATE");
+  addColumnSafe("tasks", "due_date", "DATE");
+  addColumnSafe("tasks", "progress", "INTEGER DEFAULT 0");
+  addColumnSafe("tasks", "tags", "TEXT");
+  addColumnSafe("tasks", "dependencies", "TEXT");
+
+  addColumnSafe("projects", "start_date", "DATE");
+  addColumnSafe("projects", "end_date", "DATE");
+  addColumnSafe("projects", "status", "TEXT DEFAULT 'planning'");
+  addColumnSafe("projects", "progress", "INTEGER DEFAULT 0");
+  addColumnSafe("projects", "color", "TEXT");
 });
 
 const wrapper = {
