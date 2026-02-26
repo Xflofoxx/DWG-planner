@@ -1,0 +1,39 @@
+server:
+  port: 3000
+  env: development
+  cors:
+    enabled: true
+    origins:
+      - "http://localhost:3000"
+      - "http://127.0.0.1:3000"
+
+security:
+  jwt:
+    secret: "${JWT_SECRET}"
+    expiresIn: "7d"
+  bcrypt:
+    rounds: 12
+  registration:
+    enabled: false
+
+database:
+  type: sqlite
+  path: "${DB_PATH}"
+
+upload:
+  max_file_size: 10485760
+  allowed_types:
+    - ".dwg"
+    - ".dxf"
+    - ".zip"
+    - ".pdf"
+
+features:
+  dwg_ingestion: true
+  dwg_mapping_editor: true
+  task_management: true
+  audit_logging: true
+  passwordless_auth: false
+
+demo:
+  seed_data: true

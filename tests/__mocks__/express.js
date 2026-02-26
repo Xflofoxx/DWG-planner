@@ -1,27 +1,27 @@
-const express = () => {
-  const app = {};
-  app.use = jest.fn();
-  app.get = jest.fn((path, handler) => app);
-  app.post = jest.fn((path, handler) => app);
-  app.put = jest.fn((path, handler) => app);
-  app.delete = jest.fn((path, handler) => app);
-  app.listen = jest.fn();
-  
-  const mockRouter = {
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn()
-  };
-  
-  return {
-    express: jest.fn(() => app),
-    Router: jest.fn(() => mockRouter),
-    json: jest.fn(),
-    urlencoded: jest.fn(),
-    static: jest.fn()
-  };
+const mockApp = {
+  use: jest.fn(),
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn(),
+  listen: jest.fn(),
 };
+
+const mockRouter = {
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn(),
+};
+
+const express = function () {
+  return mockApp;
+};
+
+express.json = jest.fn(() => (req, res, next) => next());
+express.urlencoded = jest.fn(() => (req, res, next) => next());
+express.static = jest.fn();
+express.Router = jest.fn(() => mockRouter);
 
 module.exports = express;
 module.exports.default = express;

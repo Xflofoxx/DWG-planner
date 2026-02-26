@@ -4,10 +4,17 @@ const User = require("../models/User");
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your_super_secret_jwt_key_change_in_production";
+const REGISTRATION_ENABLED = process.env.REGISTRATION_ENABLED === "true";
 
 const AuthController = {
   async register(req, res) {
     try {
+      if (!REGISTRATION_ENABLED) {
+        return res
+          .status(403)
+          .json({ message: "User registration is disabled" });
+      }
+
       const { email, password, role } = req.body;
 
       if (!email || !password) {

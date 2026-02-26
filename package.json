@@ -23,7 +23,8 @@
     "morgan": "^1.10.1",
     "multer": "^1.4.5-lts.1",
     "sqlite3": "^5.1.7",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "eslint": "^8.51.0",
