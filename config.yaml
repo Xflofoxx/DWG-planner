@@ -36,4 +36,6 @@ features:
   passwordless_auth: false
 
 demo:
+  admin_email: "demo@dwgplanner.local"
+  admin_password: "DemoAdmin2024!"
   seed_data: true
