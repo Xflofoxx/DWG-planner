@@ -3,9 +3,11 @@ Slug: traceability-mvp-req-test
 Intent: Definire link chiari tra requisiti MVP e i test associati.
 
 Scope
+
 - MVP DWG Planner: mapping tra DWG, task, editor, viste, risorse, login passwordless e auditing.
 
 Requisiti MVP (RQ)
+
 - RQ1 Ingest DWG / DWGFile
 - RQ2 DWG Object Mapping (DWGObject) to Task/Planning
 - RQ3 Task Lifecycle (create, update, start, pause, complete)
@@ -16,19 +18,23 @@ Requisiti MVP (RQ)
 - RQ8 Audit logging per modifiche
 - RQ9 Mapping editor per proprietà DWG
 
-Test id e descrizione (esempi)
-- CT-UDWG-01: DWG/ DWGFile creazione e associazione progetto
-- CT-MAP-01: DWGObject mapping a Task (editor) e salvataggio
-- CT-TASK-01: creazione task e assegnazione DWGObject
-- CT-LVIEW-01: Board mostra stato corrrettamente
-- CT-LVIEW-02: List mostra task per filtro
-- CT-CAL-01: Calendario mostra tasks con date
-- CT-GANT-01: Gantt mostra timeline base
-- CT-RES-01: creare risorse e assegnazioni
-- CT-PW-01: login passwordless client (mock) e verifica accesso
-- CT-RBAC-01: permessi a ruoli (client vs resource vs planner)
-- CT-AUD-01: audit log registra modifiche
-- CT-MAP-02: aggiornamento mapping riflette su viste
+Test id e descrizione (implementati)
+
+- CT-UDWG-01: DWG/DWGFile creazione e associazione progetto -> tests/models/DWGFile.test.js
+- CT-MAP-01: DWGObject mapping a Task (editor) e salvataggio -> tests/models/Mapping.test.js
+- CT-TASK-01: creazione task e assegnazione DWGObject -> tests/models/Task.test.js
+- CT-PROJ-01: gestione progetti -> tests/models/Project.test.js
+- CT-USER-01: gestione utenti -> tests/models/User.test.js
+- CT-AUTH-01: autenticazione JWT -> tests/middleware/auth.test.js
+- CT-AUD-01: audit log registra modifiche -> tests/models/AuditLog.test.js
+- CT-MAP-02: aggiornamento mapping riflette su viste -> tests/models/Mapping.test.js
+
+Stato Test
+
+- **Totale test**: 48
+- **Passanti**: 48
+- **Coverage**: Models, Middleware auth, Controllers (parziale)
 
 Tracciabilità
-- Ogni requisito mappa a uno o più test; la traccia è mantenuta nelle specifiche specifiche delle feature e in spec/traceability.md (base).
+
+- Ogni requisito mappa a uno o più test; la traccia è mantenuta nelle specifiche specifiche delle feature e in spec/traceability.md.

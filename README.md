@@ -161,6 +161,51 @@ npm test
 
 # Run tests with coverage
 npm test -- --coverage
+
+# Run tests in watch mode
+npm run test:watch
+```
+
+### Test Coverage
+
+Current test coverage includes:
+
+- **Models**: User, Project, Task, DWGFile, Mapping, AuditLog
+- **Middleware**: Authentication (JWT validation, role-based access)
+- **Controllers**: Auth registration (disabled by default)
+
+## API Response Examples
+
+### Success Response
+
+```json
+{
+  "id": "proj-123",
+  "name": "My Project",
+  "description": "Project description",
+  "created_at": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### Error Response
+
+```json
+{
+  "message": "Project not found"
+}
+```
+
+## Development
+
+```bash
+# Start development server with auto-reload
+npm run dev
+
+# Run linting
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
 ```
 
 ## Project Structure
