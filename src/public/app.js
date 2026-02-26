@@ -1,9 +1,107 @@
 let token = localStorage.getItem("token");
+let currentUser = null;
 const API_URL = "http://localhost:3000/api";
+const PAGE_SIZE = 10;
+
+const paginationState = {
+  projects: { page: 1, total: 0 },
+  tasks: { page: 1, total: 0 },
+  dwg: { page: 1, total: 0 },
+  mappings: { page: 1, total: 0 },
+};
+
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("collapsed");
+}
+
+function showSection(section) {
+  document
+    .querySelectorAll(".nav-item")
+    .forEach((el) => el.classList.remove("active"));
+  document
+    .querySelector(`[data-section="${section}"]`)
+    ?.classList.add("active");
+
+  document
+    .querySelectorAll("section")
+    .forEach((el) => el.classList.add("hidden"));
+  document.getElementById(`${section}-section`).classList.remove("hidden");
+
+  const titles = {
+    dashboard: "Dashboard",
+    projects: "Progetti",
+    tasks: "Task",
+    dwg: "File DWG",
+    mappings: "Mapping",
+  };
+  document.getElementById("page-title").textContent =
+    titles[section] || section;
+
+  loadSectionData(section);
+}
+
+function loadSectionData(section) {
+  if (section === "dashboard") loadDashboard();
+  if (section === "projects") {
+    loadProjects();
+    loadProjectsForSelect();
+  }
+  if (section === "tasks") {
+    loadTasks();
+    loadProjectsForSelect();
+  }
+  if (section === "dwg") {
+    loadDwgFiles();
+    loadProjectsForSelect();
+  }
+  if (section === "mappings") {
+    loadMappings();
+    loadDwgFilesForMapping();
+  }
+}
+
+function refreshData() {
+  const activeSection =
+    document.querySelector(".nav-item.active")?.dataset.section || "dashboard";
+  loadSectionData(activeSection);
+}
+
+async function loadDashboard() {
+  try {
+    const [projectsRes, tasksRes, dwgRes, mappingsRes] = await Promise.all([
+      fetch(`${API_URL}/projects`),
+      fetch(`${API_URL}/tasks`),
+      fetch(`${API_URL}/dwg`),
+      fetch(`${API_URL}/mappings`),
+    ]);
+
+    document.getElementById("stat-projects").textContent = (
+      await projectsRes.json()
+    ).length;
+    document.getElementById("stat-tasks").textContent = (
+      await tasksRes.json()
+    ).length;
+    document.getElementById("stat-dwg").textContent = (
+      await dwgRes.json()
+    ).length;
+    document.getElementById("stat-mappings").textContent = (
+      await mappingsRes.json()
+    ).length;
+  } catch (err) {
+    console.error(err);
+  }
+}
 
 if (token) {
   showMainApp();
 }
+
+document.querySelectorAll(".nav-item").forEach((el) => {
+  el.addEventListener("click", (e) => {
+    e.preventDefault();
+    showSection(el.dataset.section);
+  });
+});
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -19,86 +117,107 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
     const data = await res.json();
     if (res.ok) {
       token = data.token;
+      currentUser = data.user;
       localStorage.setItem("token", token);
       showMainApp();
     } else {
-      alert(data.message || "Login fallito");
+      document.getElementById("login-error").textContent =
+        data.message || "Login fallito";
     }
   } catch (err) {
-    alert("Errore di connessione");
+    document.getElementById("login-error").textContent =
+      "Errore di connessione";
   }
 });
 
-async function register() {
-  const email = prompt("Email:");
-  const password = prompt("Password:");
-  if (!email || !password) return;
-
-  try {
-    const res = await fetch(`${API_URL}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      alert("Registrazione completata! Effettua il login.");
-    } else {
-      alert(data.message || "Registrazione fallita");
-    }
-  } catch (err) {
-    alert("Errore di connessione");
-  }
-}
-
 function logout() {
   token = null;
+  currentUser = null;
   localStorage.removeItem("token");
-  document.getElementById("auth-section").classList.remove("hidden");
-  document.getElementById("main-app").classList.add("hidden");
+  document.getElementById("login-section").classList.remove("hidden");
+  document.getElementById("app-section").classList.add("hidden");
 }
 
 function showMainApp() {
-  document.getElementById("auth-section").classList.add("hidden");
-  document.getElementById("main-app").classList.remove("hidden");
-  loadProjects();
-  loadProjectsForSelect();
-}
+  document.getElementById("login-section").classList.add("hidden");
+  document.getElementById("app-section").classList.remove("hidden");
 
-function showSection(section) {
-  ["projects", "tasks", "dwg", "mappings"].forEach((s) => {
-    document.getElementById(`${s}-section`).classList.add("hidden");
-  });
-  document.getElementById(`${section}-section`).classList.remove("hidden");
-
-  if (section === "projects") loadProjects();
-  if (section === "tasks") loadTasks();
-  if (section === "dwg") loadDwgFiles();
-  if (section === "mappings") {
-    loadDwgFilesForMapping();
-    loadMappings();
+  if (currentUser) {
+    document.getElementById("user-name").textContent = currentUser.email;
+    document.getElementById("user-role").textContent = currentUser.role;
+    document.getElementById("user-avatar").textContent = currentUser.email
+      .charAt(0)
+      .toUpperCase();
   }
+
+  loadDashboard();
 }
 
 async function loadProjects() {
+  const { page } = paginationState.projects;
   try {
-    const res = await fetch(`${API_URL}/projects`);
+    const res = await fetch(
+      `${API_URL}/projects?page=${page}&limit=${PAGE_SIZE}`,
+    );
     const projects = await res.json();
+
+    const totalRes = await fetch(`${API_URL}/projects`);
+    const allProjects = await totalRes.json();
+    paginationState.projects.total = allProjects.length;
+
     const list = document.getElementById("projects-list");
-    list.innerHTML = projects
-      .map(
-        (p) => `
-      <div class="card">
-        <h3>${p.name}</h3>
-        <p>${p.description || ""}</p>
-        <p style="color: #7f8c8d; font-size: 12px;">Creato: ${new Date(p.created_at).toLocaleDateString()}</p>
-      </div>
-    `,
-      )
-      .join("");
+    if (projects.length === 0) {
+      list.innerHTML = '<div class="empty-state">Nessun progetto trovato</div>';
+    } else {
+      list.innerHTML = `
+        <table class="table">
+          <thead><tr><th>Nome</th><th>Descrizione</th><th>Creato</th></tr></thead>
+          <tbody>
+            ${projects
+              .map(
+                (p) => `
+              <tr>
+                <td>${p.name}</td>
+                <td>${p.description || "-"}</td>
+                <td>${new Date(p.created_at).toLocaleDateString()}</td>
+              </tr>
+            `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    renderPagination("projects", projects.length);
   } catch (err) {
     console.error(err);
   }
+}
+
+function renderPagination(type, count) {
+  const { page, total } = paginationState[type];
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const container = document.getElementById(`${type}-pagination`);
+
+  if (totalPages <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = `
+    <button class="pagination-btn" onclick="changePage('${type}', ${page - 1})" ${page === 1 ? "disabled" : ""}>Precedente</button>
+    <span class="pagination-info">Pagina ${page} di ${totalPages}</span>
+    <button class="pagination-btn" onclick="changePage('${type}', ${page + 1})" ${page >= totalPages ? "disabled" : ""}>Successivo</button>
+  `;
+}
+
+function changePage(type, page) {
+  paginationState[type].page = page;
+  if (type === "projects") loadProjects();
+  else if (type === "tasks") loadTasks();
+  else if (type === "dwg") loadDwgFiles();
+  else if (type === "mappings") loadMappings();
 }
 
 document
@@ -143,29 +262,40 @@ async function loadProjectsForSelect() {
 }
 
 async function loadTasks() {
+  const { page } = paginationState.tasks;
   try {
-    const res = await fetch(`${API_URL}/tasks`);
+    const res = await fetch(`${API_URL}/tasks?page=${page}&limit=${PAGE_SIZE}`);
     const tasks = await res.json();
+
+    const totalRes = await fetch(`${API_URL}/tasks`);
+    paginationState.tasks.total = (await totalRes.json()).length;
+
     const list = document.getElementById("tasks-list");
-    list.innerHTML = `
-    <table>
-      <thead><tr><th>Titolo</th><th>Stato</th><th>Priorità</th><th>Progetto</th></tr></thead>
-      <tbody>
-        ${tasks
-          .map(
-            (t) => `
-          <tr>
-            <td>${t.title}</td>
-            <td><span class="badge badge-${t.status}">${t.status}</span></td>
-            <td><span class="badge badge-${t.priority}">${t.priority}</span></td>
-            <td>${t.project_id}</td>
-          </tr>
-        `,
-          )
-          .join("")}
-      </tbody>
-    </table>
-  `;
+    if (tasks.length === 0) {
+      list.innerHTML = '<div class="empty-state">Nessun task trovato</div>';
+    } else {
+      list.innerHTML = `
+        <table class="table">
+          <thead><tr><th>Titolo</th><th>Stato</th><th>Priorità</th><th>Progetto</th></tr></thead>
+          <tbody>
+            ${tasks
+              .map(
+                (t) => `
+              <tr>
+                <td>${t.title}</td>
+                <td><span class="badge badge-${t.status}">${t.status}</span></td>
+                <td><span class="badge badge-${t.priority}">${t.priority}</span></td>
+                <td>${t.project_id || "-"}</td>
+              </tr>
+            `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    renderPagination("tasks", tasks.length);
   } catch (err) {
     console.error(err);
   }
@@ -185,12 +315,7 @@ document.getElementById("task-form").addEventListener("submit", async (e) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        project_id,
-        title,
-        description,
-        priority,
-      }),
+      body: JSON.stringify({ project_id, title, description, priority }),
     });
     if (res.ok) {
       document.getElementById("task-form").reset();
@@ -204,21 +329,40 @@ document.getElementById("task-form").addEventListener("submit", async (e) => {
 });
 
 async function loadDwgFiles() {
+  const { page } = paginationState.dwg;
   try {
-    const res = await fetch(`${API_URL}/dwg`);
+    const res = await fetch(`${API_URL}/dwg?page=${page}&limit=${PAGE_SIZE}`);
     const files = await res.json();
+
+    const totalRes = await fetch(`${API_URL}/dwg`);
+    paginationState.dwg.total = (await totalRes.json()).length;
+
     const list = document.getElementById("dwg-list");
-    list.innerHTML = files
-      .map(
-        (f) => `
-      <div class="card">
-        <h3>${f.name}</h3>
-        <p>Versione: ${f.version} | Size: ${f.size || 0} bytes</p>
-        <p style="color: #7f8c8d; font-size: 12px;">Caricato: ${new Date(f.uploaded_at).toLocaleDateString()}</p>
-      </div>
-    `,
-      )
-      .join("");
+    if (files.length === 0) {
+      list.innerHTML = '<div class="empty-state">Nessun file DWG trovato</div>';
+    } else {
+      list.innerHTML = `
+        <table class="table">
+          <thead><tr><th>Nome</th><th>Versione</th><th>Dimensione</th><th>Data</th></tr></thead>
+          <tbody>
+            ${files
+              .map(
+                (f) => `
+              <tr>
+                <td>${f.name}</td>
+                <td>${f.version || "1.0"}</td>
+                <td>${f.size || 0} bytes</td>
+                <td>${new Date(f.uploaded_at).toLocaleDateString()}</td>
+              </tr>
+            `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    renderPagination("dwg", files.length);
   } catch (err) {
     console.error(err);
   }
@@ -263,21 +407,42 @@ async function loadDwgFilesForMapping() {
 }
 
 async function loadMappings() {
+  const { page } = paginationState.mappings;
   try {
-    const res = await fetch(`${API_URL}/mappings`);
+    const res = await fetch(
+      `${API_URL}/mappings?page=${page}&limit=${PAGE_SIZE}`,
+    );
     const mappings = await res.json();
+
+    const totalRes = await fetch(`${API_URL}/mappings`);
+    paginationState.mappings.total = (await totalRes.json()).length;
+
     const list = document.getElementById("mappings-list");
-    list.innerHTML = mappings
-      .map(
-        (m) => `
-      <div class="card">
-        <h3>DWG: ${m.dwg_file_id}</h3>
-        <p>Layer: ${m.layer || "-"} | Handle: ${m.handle || "-"} | Tag: ${m.tag || "-"}</p>
-        <p>Campo Task: ${m.task_field} | Campo Planning: ${m.planning_field || "-"}</p>
-      </div>
-    `,
-      )
-      .join("");
+    if (mappings.length === 0) {
+      list.innerHTML = '<div class="empty-state">Nessun mapping trovato</div>';
+    } else {
+      list.innerHTML = `
+        <table class="table">
+          <thead><tr><th>Layer</th><th>Handle</th><th>Campo Task</th><th>Campo Planning</th></tr></thead>
+          <tbody>
+            ${mappings
+              .map(
+                (m) => `
+              <tr>
+                <td>${m.layer || "-"}</td>
+                <td>${m.handle || "-"}</td>
+                <td>${m.task_field}</td>
+                <td>${m.planning_field || "-"}</td>
+              </tr>
+            `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    renderPagination("mappings", mappings.length);
   } catch (err) {
     console.error(err);
   }
@@ -290,7 +455,6 @@ document
     const dwg_file_id = document.getElementById("mapping-dwg").value;
     const layer = document.getElementById("mapping-layer").value;
     const handle = document.getElementById("mapping-handle").value;
-    const tag = document.getElementById("mapping-tag").value;
     const task_field = document.getElementById("mapping-task-field").value;
     const planning_field = document.getElementById(
       "mapping-planning-field",
@@ -307,7 +471,6 @@ document
           dwg_file_id,
           layer,
           handle,
-          tag,
           task_field,
           planning_field,
         }),

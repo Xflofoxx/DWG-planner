@@ -23,10 +23,19 @@ db.serialize(() => {
   db.run(
     `CREATE TABLE IF NOT EXISTS audit_logs (id TEXT PRIMARY KEY, user_id TEXT, action TEXT NOT NULL, resource_type TEXT, resource_id TEXT, details TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`,
   );
+  db.run(
+    `CREATE TABLE IF NOT EXISTS project_users (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, user_id TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'user', assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP, assigned_by TEXT, FOREIGN KEY (project_id) REFERENCES projects(id), FOREIGN KEY (user_id) REFERENCES users(id), UNIQUE(project_id, user_id))`,
+  );
   db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_assigned ON tasks(assigned_to)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_dwg_project ON dwg_files(project_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id)`);
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_project_users_project ON project_users(project_id)`,
+  );
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_project_users_user ON project_users(user_id)`,
+  );
 });
 
 const wrapper = {

@@ -11,6 +11,7 @@ const projectRoutes = require("./routes/projects");
 const taskRoutes = require("./routes/tasks");
 const mappingRoutes = require("./routes/mappings");
 const auditLogRoutes = require("./routes/auditLogs");
+const projectUsersRoutes = require("./routes/projectUsers");
 const authMiddleware = require("./middleware/auth");
 const { initDemoUser } = require("./scripts/init-demo");
 
@@ -31,6 +32,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/mappings", mappingRoutes);
 app.use("/api/audit-logs", auditLogRoutes);
+app.use("/api/project-users", projectUsersRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "DWG Planner MVP API is running" });

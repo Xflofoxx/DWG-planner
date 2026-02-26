@@ -3,293 +3,934 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DWG Planner MVP</title>
+    <title>DWG Planner</title>
     <style>
+      :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --secondary: #64748b;
+        --success: #22c55e;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --border: #e2e8f0;
+        --text: #1e293b;
+        --text-light: #64748b;
+        --sidebar-width: 260px;
+        --sidebar-collapsed: 70px;
+        --header-height: 60px;
+      }
+
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
+
       body {
         font-family:
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: #f5f5f5;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
       }
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-      header {
-        background: #2c3e50;
-        color: white;
-        padding: 20px 0;
-        margin-bottom: 30px;
-      }
-      header h1 {
-        text-align: center;
-      }
-      .nav {
+
+      .app-container {
         display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
+        min-height: 100vh;
       }
-      .nav button {
-        padding: 10px 20px;
-        background: #3498db;
-        color: white;
+
+      .sidebar {
+        width: var(--sidebar-width);
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease;
+        position: fixed;
+        height: 100vh;
+        z-index: 100;
+      }
+
+      .sidebar.collapsed {
+        width: var(--sidebar-collapsed);
+      }
+
+      .sidebar-header {
+        height: var(--header-height);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .logo {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--primary);
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .sidebar.collapsed .logo span {
+        display: none;
+      }
+
+      .toggle-btn {
+        background: none;
         border: none;
-        border-radius: 4px;
         cursor: pointer;
-      }
-      .nav button:hover {
-        background: #2980b9;
-      }
-      .section {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-      }
-      .section h2 {
-        margin-bottom: 15px;
-        color: #2c3e50;
-      }
-      .form-group {
-        margin-bottom: 15px;
-      }
-      .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: 500;
-      }
-      .form-group input,
-      .form-group select,
-      .form-group textarea {
-        width: 100%;
         padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
+        border-radius: 6px;
+        color: var(--text-light);
+        transition: background 0.2s;
       }
+
+      .toggle-btn:hover {
+        background: var(--bg);
+      }
+
+      .nav-menu {
+        flex: 1;
+        padding: 16px 8px;
+        overflow-y: auto;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        margin-bottom: 4px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--text-light);
+        transition: all 0.2s;
+        text-decoration: none;
+      }
+
+      .nav-item:hover {
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .nav-item.active {
+        background: var(--primary);
+        color: white;
+      }
+
+      .nav-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .nav-label {
+        margin-left: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .sidebar.collapsed .nav-label {
+        display: none;
+      }
+
+      .sidebar.collapsed .nav-item {
+        justify-content: center;
+        padding: 12px;
+      }
+
+      .user-section {
+        padding: 16px;
+        border-top: 1px solid var(--border);
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      .user-details {
+        overflow: hidden;
+      }
+
+      .sidebar.collapsed .user-details {
+        display: none;
+      }
+
+      .user-name {
+        font-weight: 600;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .user-role {
+        font-size: 12px;
+        color: var(--text-light);
+      }
+
+      .main-content {
+        flex: 1;
+        margin-left: var(--sidebar-width);
+        transition: margin-left 0.3s ease;
+      }
+
+      .sidebar.collapsed ~ .main-content {
+        margin-left: var(--sidebar-collapsed);
+      }
+
+      .header {
+        height: var(--header-height);
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+
+      .header-title {
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      .content {
+        padding: 24px;
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .card-title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 6px;
+        color: var(--text);
+      }
+
+      .form-input,
+      .form-select,
+      .form-textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .form-input:focus,
+      .form-select:focus,
+      .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+      }
+
       .btn {
         padding: 10px 20px;
-        background: #27ae60;
-        color: white;
-        border: none;
-        border-radius: 4px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
         cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
       }
-      .btn:hover {
-        background: #219a52;
+
+      .btn-primary {
+        background: var(--primary);
+        color: white;
       }
+
+      .btn-primary:hover {
+        background: var(--primary-dark);
+      }
+
+      .btn-secondary {
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+
+      .btn-secondary:hover {
+        background: var(--border);
+      }
+
       .btn-danger {
-        background: #e74c3c;
+        background: var(--danger);
+        color: white;
       }
+
       .btn-danger:hover {
-        background: #c0392b;
+        background: #dc2626;
       }
-      table {
+
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+
+      .table {
         width: 100%;
         border-collapse: collapse;
       }
-      th,
-      td {
-        padding: 12px;
+
+      .table th,
+      .table td {
+        padding: 12px 16px;
         text-align: left;
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid var(--border);
       }
-      th {
-        background: #f8f9fa;
+
+      .table th {
         font-weight: 600;
+        font-size: 13px;
+        color: var(--text-light);
+        background: var(--bg);
       }
-      .card {
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 15px;
-        margin-bottom: 10px;
+
+      .table tr:hover {
+        background: var(--bg);
       }
-      .card h3 {
-        margin-bottom: 10px;
-        color: #2c3e50;
-      }
+
       .badge {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 4px;
+        display: inline-flex;
+        padding: 4px 10px;
+        border-radius: 20px;
         font-size: 12px;
+        font-weight: 500;
       }
+
       .badge-pending {
-        background: #f39c12;
-        color: white;
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .badge-in_progress {
+        background: #dbeafe;
+        color: #1e40af;
       }
       .badge-completed {
-        background: #27ae60;
-        color: white;
-      }
-      .badge-high {
-        background: #e74c3c;
-        color: white;
-      }
-      .badge-medium {
-        background: #3498db;
-        color: white;
+        background: #dcfce7;
+        color: #166534;
       }
       .badge-low {
-        background: #95a5a6;
-        color: white;
+        background: #f1f5f9;
+        color: #475569;
       }
-      .hidden {
-        display: none;
+      .badge-medium {
+        background: #dbeafe;
+        color: #1e40af;
       }
-      #login-form {
+      .badge-high {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      }
+
+      .login-card {
+        background: var(--surface);
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        width: 100%;
         max-width: 400px;
-        margin: 50px auto;
       }
-      .auth-section {
+
+      .login-title {
         text-align: center;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--primary);
+      }
+
+      .login-subtitle {
+        text-align: center;
+        color: var(--text-light);
+        margin-bottom: 32px;
+      }
+
+      .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+      }
+
+      .pagination-btn {
+        padding: 8px 14px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .pagination-btn:hover:not(:disabled) {
+        background: var(--bg);
+      }
+
+      .pagination-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .pagination-info {
+        font-size: 14px;
+        color: var(--text-light);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+      .text-center {
+        text-align: center;
+      }
+      .mt-4 {
+        margin-top: 16px;
+      }
+      .mb-4 {
+        margin-bottom: 16px;
+      }
+      .flex {
+        display: flex;
+      }
+      .justify-between {
+        justify-content: space-between;
+      }
+      .items-center {
+        align-items: center;
+      }
+      .gap-2 {
+        gap: 8px;
+      }
+      .gap-4 {
+        gap: 16px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .stat-card {
+        background: var(--surface);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+      }
+
+      .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .stat-label {
+        font-size: 14px;
+        color: var(--text-light);
+        margin-top: 4px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-light);
       }
     </style>
   </head>
   <body>
-    <header>
-      <h1>DWG Planner MVP</h1>
-    </header>
-
-    <div class="container">
-      <div id="auth-section" class="section auth-section">
-        <h2>Login</h2>
+    <div id="login-section" class="login-container">
+      <div class="login-card">
+        <h1 class="login-title">DWG Planner</h1>
+        <p class="login-subtitle">Accedi al tuo account</p>
         <form id="login-form">
           <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="email" required />
+            <label class="form-label">Email</label>
+            <input
+              type="email"
+              id="email"
+              class="form-input"
+              required
+              placeholder="Inserisci la tua email"
+            />
           </div>
           <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="password" required />
+            <label class="form-label">Password</label>
+            <input
+              type="password"
+              id="password"
+              class="form-input"
+              required
+              placeholder="Inserisci la password"
+            />
           </div>
-          <button type="submit" class="btn">Accedi</button>
-          <button
-            type="button"
-            class="btn"
-            onclick="register()"
-            style="margin-left: 10px; background: #3498db"
-          >
-            Registrati
+          <button type="submit" class="btn btn-primary" style="width: 100%">
+            Accedi
           </button>
         </form>
+        <p
+          id="login-error"
+          class="text-center mt-4"
+          style="color: var(--danger)"
+        ></p>
       </div>
+    </div>
 
-      <div id="main-app" class="hidden">
-        <div class="nav">
-          <button onclick="showSection('projects')">Progetti</button>
-          <button onclick="showSection('tasks')">Task</button>
-          <button onclick="showSection('dwg')">File DWG</button>
-          <button onclick="showSection('mappings')">Mapping</button>
+    <div id="app-section" class="app-container hidden">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">DWG <span>Planner</span></div>
+          <button class="toggle-btn" onclick="toggleSidebar()">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M3 12h18M3 6h18M3 18h18" />
+            </svg>
+          </button>
+        </div>
+
+        <nav class="nav-menu">
+          <a class="nav-item active" data-section="dashboard">
+            <span class="nav-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+            </span>
+            <span class="nav-label">Dashboard</span>
+          </a>
+          <a class="nav-item" data-section="projects">
+            <span class="nav-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                />
+              </svg>
+            </span>
+            <span class="nav-label">Progetti</span>
+          </a>
+          <a class="nav-item" data-section="tasks">
+            <span class="nav-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M9 11l3 3L22 4" />
+                <path
+                  d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+                />
+              </svg>
+            </span>
+            <span class="nav-label">Task</span>
+          </a>
+          <a class="nav-item" data-section="dwg">
+            <span class="nav-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+            </span>
+            <span class="nav-label">File DWG</span>
+          </a>
+          <a class="nav-item" data-section="mappings">
+            <span class="nav-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+              </svg>
+            </span>
+            <span class="nav-label">Mapping</span>
+          </a>
+        </nav>
+
+        <div class="user-section">
+          <div class="user-info">
+            <div class="user-avatar" id="user-avatar">D</div>
+            <div class="user-details">
+              <div class="user-name" id="user-name">Demo User</div>
+              <div class="user-role" id="user-role">Admin</div>
+            </div>
+          </div>
           <button
+            class="btn btn-secondary btn-sm mt-4"
+            style="width: 100%"
             onclick="logout()"
-            style="margin-left: auto; background: #e74c3c"
           >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
             Logout
           </button>
         </div>
+      </aside>
 
-        <div id="projects-section" class="section">
-          <h2>Progetti</h2>
-          <form id="project-form">
-            <div class="form-group">
-              <label>Nome Progetto</label>
-              <input type="text" id="project-name" required />
-            </div>
-            <div class="form-group">
-              <label>Descrizione</label>
-              <textarea id="project-desc" rows="2"></textarea>
-            </div>
-            <button type="submit" class="btn">Crea Progetto</button>
-          </form>
-          <div id="projects-list" style="margin-top: 20px"></div>
-        </div>
+      <main class="main-content">
+        <header class="header">
+          <h1 class="header-title" id="page-title">Dashboard</h1>
+          <div class="header-actions">
+            <button class="btn btn-secondary btn-sm" onclick="refreshData()">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path
+                  d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                />
+              </svg>
+              Aggiorna
+            </button>
+          </div>
+        </header>
 
-        <div id="tasks-section" class="section hidden">
-          <h2>Task</h2>
-          <form id="task-form">
-            <div class="form-group">
-              <label>Progetto</label>
-              <select id="task-project" required></select>
+        <div class="content">
+          <section id="dashboard-section">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-value" id="stat-projects">0</div>
+                <div class="stat-label">Progetti</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" id="stat-tasks">0</div>
+                <div class="stat-label">Task</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" id="stat-dwg">0</div>
+                <div class="stat-label">File DWG</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" id="stat-mappings">0</div>
+                <div class="stat-label">Mapping</div>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Titolo</label>
-              <input type="text" id="task-title" required />
-            </div>
-            <div class="form-group">
-              <label>Descrizione</label>
-              <textarea id="task-desc" rows="2"></textarea>
-            </div>
-            <div class="form-group">
-              <label>Priorità</label>
-              <select id="task-priority">
-                <option value="low">Bassa</option>
-                <option value="medium" selected>Media</option>
-                <option value="high">Alta</option>
-              </select>
-            </div>
-            <button type="submit" class="btn">Crea Task</button>
-          </form>
-          <div id="tasks-list" style="margin-top: 20px"></div>
-        </div>
+          </section>
 
-        <div id="dwg-section" class="section hidden">
-          <h2>File DWG</h2>
-          <form id="dwg-form">
-            <div class="form-group">
-              <label>Progetto</label>
-              <select id="dwg-project" required></select>
+          <section id="projects-section" class="hidden">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Nuovo Progetto</h2>
+              </div>
+              <form id="project-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Nome Progetto</label>
+                    <input
+                      type="text"
+                      id="project-name"
+                      class="form-input"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Descrizione</label>
+                    <input type="text" id="project-desc" class="form-input" />
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Crea Progetto
+                </button>
+              </form>
             </div>
-            <div class="form-group">
-              <label>Nome File</label>
-              <input type="text" id="dwg-name" required />
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">I tuoi Progetti</h2>
+              </div>
+              <div id="projects-list" class="table-container"></div>
+              <div class="pagination" id="projects-pagination"></div>
             </div>
-            <div class="form-group">
-              <label>Versione</label>
-              <input type="text" id="dwg-version" value="1.0" />
-            </div>
-            <button type="submit" class="btn">Carica File DWG</button>
-          </form>
-          <div id="dwg-list" style="margin-top: 20px"></div>
-        </div>
+          </section>
 
-        <div id="mappings-section" class="section hidden">
-          <h2>Mapping DWG</h2>
-          <form id="mapping-form">
-            <div class="form-group">
-              <label>File DWG</label>
-              <select id="mapping-dwg" required></select>
+          <section id="tasks-section" class="hidden">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Nuovo Task</h2>
+              </div>
+              <form id="task-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Progetto</label>
+                    <select
+                      id="task-project"
+                      class="form-select"
+                      required
+                    ></select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Titolo</label>
+                    <input
+                      type="text"
+                      id="task-title"
+                      class="form-input"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Priorità</label>
+                    <select id="task-priority" class="form-select">
+                      <option value="low">Bassa</option>
+                      <option value="medium" selected>Media</option>
+                      <option value="high">Alta</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Descrizione</label>
+                  <textarea
+                    id="task-desc"
+                    class="form-textarea"
+                    rows="2"
+                  ></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Crea Task</button>
+              </form>
             </div>
-            <div class="form-group">
-              <label>Layer</label>
-              <input type="text" id="mapping-layer" />
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">I tuoi Task</h2>
+              </div>
+              <div id="tasks-list" class="table-container"></div>
+              <div class="pagination" id="tasks-pagination"></div>
             </div>
-            <div class="form-group">
-              <label>Handle</label>
-              <input type="text" id="mapping-handle" />
+          </section>
+
+          <section id="dwg-section" class="hidden">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Carica File DWG</h2>
+              </div>
+              <form id="dwg-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Progetto</label>
+                    <select
+                      id="dwg-project"
+                      class="form-select"
+                      required
+                    ></select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Nome File</label>
+                    <input
+                      type="text"
+                      id="dwg-name"
+                      class="form-input"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Versione</label>
+                    <input
+                      type="text"
+                      id="dwg-version"
+                      class="form-input"
+                      value="1.0"
+                    />
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Carica File
+                </button>
+              </form>
             </div>
-            <div class="form-group">
-              <label>Tag</label>
-              <input type="text" id="mapping-tag" />
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">File DWG</h2>
+              </div>
+              <div id="dwg-list" class="table-container"></div>
+              <div class="pagination" id="dwg-pagination"></div>
             </div>
-            <div class="form-group">
-              <label>Campo Task</label>
-              <input type="text" id="mapping-task-field" required />
+          </section>
+
+          <section id="mappings-section" class="hidden">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Nuovo Mapping</h2>
+              </div>
+              <form id="mapping-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">File DWG</label>
+                    <select
+                      id="mapping-dwg"
+                      class="form-select"
+                      required
+                    ></select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Layer</label>
+                    <input type="text" id="mapping-layer" class="form-input" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Handle</label>
+                    <input type="text" id="mapping-handle" class="form-input" />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Campo Task</label>
+                    <input
+                      type="text"
+                      id="mapping-task-field"
+                      class="form-input"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Campo Planning</label>
+                    <input
+                      type="text"
+                      id="mapping-planning-field"
+                      class="form-input"
+                    />
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Crea Mapping
+                </button>
+              </form>
             </div>
-            <div class="form-group">
-              <label>Campo Planning</label>
-              <input type="text" id="mapping-planning-field" />
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Mapping</h2>
+              </div>
+              <div id="mappings-list" class="table-container"></div>
+              <div class="pagination" id="mappings-pagination"></div>
             </div>
-            <button type="submit" class="btn">Crea Mapping</button>
-          </form>
-          <div id="mappings-list" style="margin-top: 20px"></div>
+          </section>
         </div>
+      </main>
     </div>
 
     <script src="/app.js"></script>
