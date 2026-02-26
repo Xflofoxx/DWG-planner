@@ -12,6 +12,7 @@ const taskRoutes = require("./routes/tasks");
 const mappingRoutes = require("./routes/mappings");
 const auditLogRoutes = require("./routes/auditLogs");
 const authMiddleware = require("./middleware/auth");
+const { initDemoUser } = require("./scripts/init-demo");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,8 +45,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong!" });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
+  try {
+    await initDemoUser();
+  } catch (err) {
+    console.error("Failed to initialize demo user:", err);
+  }
 });
 
 module.exports = app;
