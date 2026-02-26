@@ -9,13 +9,13 @@ db.serialize(() => {
     `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL, role TEXT DEFAULT 'user', created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`,
   );
   db.run(
-    `CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`,
+    `CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT, start_date DATE, end_date DATE, status TEXT DEFAULT 'planning', progress INTEGER DEFAULT 0, color TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`,
   );
   db.run(
-    `CREATE TABLE IF NOT EXISTS dwg_files (id TEXT PRIMARY KEY, project_id TEXT, name TEXT NOT NULL, version TEXT, uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP, size INTEGER, mime_type TEXT, file_path TEXT)`,
+    `CREATE TABLE IF NOT EXISTS dwg_files (id TEXT PRIMARY KEY, project_id TEXT, name TEXT NOT NULL, version TEXT, uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP, size INTEGER, mime_type TEXT, file_path TEXT, layers TEXT)`,
   );
   db.run(
-    `CREATE TABLE IF NOT EXISTS tasks (id TEXT PRIMARY KEY, project_id TEXT, title TEXT NOT NULL, description TEXT, status TEXT DEFAULT 'pending', priority TEXT DEFAULT 'medium', assigned_to TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`,
+    `CREATE TABLE IF NOT EXISTS tasks (id TEXT PRIMARY KEY, project_id TEXT, title TEXT NOT NULL, description TEXT, status TEXT DEFAULT 'pending', priority TEXT DEFAULT 'medium', assigned_to TEXT, start_date DATE, due_date DATE, progress INTEGER DEFAULT 0, tags TEXT, dependencies TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`,
   );
   db.run(
     `CREATE TABLE IF NOT EXISTS mappings (id TEXT PRIMARY KEY, dwg_file_id TEXT, layer TEXT, handle TEXT, tag TEXT, task_field TEXT, planning_field TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`,
@@ -26,8 +26,13 @@ db.serialize(() => {
   db.run(
     `CREATE TABLE IF NOT EXISTS project_users (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, user_id TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'user', assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP, assigned_by TEXT, FOREIGN KEY (project_id) REFERENCES projects(id), FOREIGN KEY (user_id) REFERENCES users(id), UNIQUE(project_id, user_id))`,
   );
+  db.run(
+    `CREATE TABLE IF NOT EXISTS milestones (id TEXT PRIMARY KEY, project_id TEXT, name TEXT NOT NULL, description TEXT, date DATE, status TEXT DEFAULT 'pending', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (project_id) REFERENCES projects(id))`,
+  );
   db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_assigned ON tasks(assigned_to)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_dwg_project ON dwg_files(project_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id)`);
   db.run(
@@ -35,6 +40,9 @@ db.serialize(() => {
   );
   db.run(
     `CREATE INDEX IF NOT EXISTS idx_project_users_user ON project_users(user_id)`,
+  );
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id)`,
   );
 });
 
