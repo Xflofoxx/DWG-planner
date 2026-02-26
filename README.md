@@ -4,11 +4,14 @@ DWG Planner is a web application for project management with DWG file support, t
 
 ## Tech Stack
 
-- **Backend**: Node.js 20.x + Express.js
-- **Database**: SQLite
-- **Frontend**: HTML/JS vanilla
-- **Testing**: Jest + Supertest
-- **Authentication**: JWT + bcrypt
+| Component      | Technology      | Version |
+| -------------- | --------------- | ------- |
+| Runtime        | Node.js         | 20.x    |
+| Framework      | Express.js      | 4.x     |
+| Database       | SQLite          | 3.x     |
+| Authentication | JWT + bcrypt    | -       |
+| Testing        | Jest            | 29.x    |
+| Frontend       | Vanilla HTML/JS | -       |
 
 ## Quick Start
 
@@ -20,15 +23,21 @@ npm install
 cp credentials.yaml.example credentials.yaml
 
 # Edit credentials.yaml with your values
-# Then start server (creates demo admin user automatically)
 npm start
 ```
+
+## Demo User
+
+On first start, an admin user is automatically created:
+
+- **Email**: demo@dwgplanner.local
+- **Password**: (see credentials.yaml)
 
 ## Configuration
 
 ### credentials.yaml
 
-Sensitive configuration is stored in `credentials.yaml`:
+Sensitive configuration stored in `credentials.yaml`:
 
 ```yaml
 server:
@@ -37,7 +46,7 @@ server:
 
 security:
   jwt:
-    secret: "your_secret_key"
+    secret: "CHANGE_ME_IN_PRODUCTION"
     expiresIn: "7d"
 
 database:
@@ -45,12 +54,12 @@ database:
 
 demo:
   admin_email: "demo@dwgplanner.local"
-  admin_password: "DemoAdmin2024!"
+  admin_password: "Demo!2026!"
 ```
 
 ### config.yaml
 
-General application configuration in `config.yaml`:
+General application configuration:
 
 ```yaml
 server:
@@ -90,68 +99,86 @@ features:
   passwordless_auth: false
 ```
 
-### Environment Variables
+## RBAC - Role-Based Access Control
 
-You can also use `.env` (variables override config.yaml):
+The system implements RBAC with three main roles:
 
-```bash
-PORT=3000
-JWT_SECRET=your_secret
-REGISTRATION_ENABLED=false
-```
+| Role      | Description          | Access Level             |
+| --------- | -------------------- | ------------------------ |
+| admin     | System administrator | Full system access       |
+| pm        | Project Manager      | Full project access      |
+| operativo | Field Worker         | Limited project access   |
+| cliente   | Client               | Read-only project access |
 
-## Demo User
+### Role Permissions
 
-On first start, an admin user is automatically created:
-
-- **Email**: demo@dwgplanner.local
-- **Password**: DemoAdmin2024!
+| Resource   | Admin | PM   | Operativo  | Cliente |
+| ---------- | ----- | ---- | ---------- | ------- |
+| Users      | CRUD  | -    | -          | -       |
+| Projects   | CRUD  | CRUD | Read       | Read    |
+| Tasks      | CRUD  | CRUD | Update own | Read    |
+| DWG Files  | CRUD  | CRUD | Read       | Read    |
+| Mappings   | CRUD  | CRUD | -          | -       |
+| Audit Logs | Read  | Read | -          | -       |
 
 ## API Endpoints
 
 ### Authentication
 
-- `POST /api/auth/login` - Login
-- `POST /api/auth/register` - Registration (disabled by default)
-- `GET /api/auth/profile` - User profile
+| Method | Endpoint           | Description             |
+| ------ | ------------------ | ----------------------- |
+| POST   | /api/auth/login    | Login                   |
+| POST   | /api/auth/register | Registration (disabled) |
+| GET    | /api/auth/profile  | User profile            |
 
 ### Projects
 
-- `GET /api/projects` - List projects
-- `POST /api/projects` - Create project
-- `GET /api/projects/:id` - Get project
-- `PUT /api/projects/:id` - Update project
-- `DELETE /api/projects/:id` - Delete project
+| Method | Endpoint          | Description    |
+| ------ | ----------------- | -------------- |
+| GET    | /api/projects     | List projects  |
+| POST   | /api/projects     | Create project |
+| GET    | /api/projects/:id | Get project    |
+| PUT    | /api/projects/:id | Update project |
+| DELETE | /api/projects/:id | Delete project |
 
 ### Tasks
 
-- `GET /api/tasks` - List tasks (supports ?project_id=)
-- `POST /api/tasks` - Create task
-- `GET /api/tasks/:id` - Get task
-- `PUT /api/tasks/:id` - Update task
-- `DELETE /api/tasks/:id` - Delete task
+| Method | Endpoint                | Description |
+| ------ | ----------------------- | ----------- |
+| GET    | /api/tasks              | List tasks  |
+| POST   | /api/tasks              | Create task |
+| GET    | /api/tasks/:id          | Get task    |
+| PUT    | /api/tasks/:id          | Update task |
+| DELETE | /api/tasks/:id          | Delete task |
+| GET    | /api/tasks/user/:userId | User tasks  |
 
 ### DWG Files
 
-- `GET /api/dwg` - List DWG files
-- `POST /api/dwg` - Upload DWG file
-- `GET /api/dwg/project/:projectId` - Project DWG files
-- `GET /api/dwg/:id` - Get DWG file
-- `PUT /api/dwg/:id` - Update DWG file
-- `DELETE /api/dwg/:id` - Delete DWG file
+| Method | Endpoint                    | Description       |
+| ------ | --------------------------- | ----------------- |
+| GET    | /api/dwg                    | List DWG files    |
+| POST   | /api/dwg                    | Create DWG file   |
+| GET    | /api/dwg/project/:projectId | Project DWG files |
+| GET    | /api/dwg/:id                | Get DWG file      |
+| PUT    | /api/dwg/:id                | Update DWG file   |
+| DELETE | /api/dwg/:id                | Delete DWG file   |
 
 ### Mapping
 
-- `GET /api/mappings` - List mappings
-- `POST /api/mappings` - Create mapping
-- `PUT /api/mappings/:id` - Update mapping
-- `DELETE /api/mappings/:id` - Delete mapping
+| Method | Endpoint          | Description    |
+| ------ | ----------------- | -------------- |
+| GET    | /api/mappings     | List mappings  |
+| POST   | /api/mappings     | Create mapping |
+| PUT    | /api/mappings/:id | Update mapping |
+| DELETE | /api/mappings/:id | Delete mapping |
 
 ### Audit Log
 
-- `GET /api/audit-logs` - List logs (authenticated)
-- `GET /api/audit-logs/user/:userId` - User logs
-- `GET /api/audit-logs/resource/:type/:id` - Resource logs
+| Method | Endpoint                           | Description   |
+| ------ | ---------------------------------- | ------------- |
+| GET    | /api/audit-logs                    | List logs     |
+| GET    | /api/audit-logs/user/:userId       | User logs     |
+| GET    | /api/audit-logs/resource/:type/:id | Resource logs |
 
 ## Testing
 
@@ -168,38 +195,27 @@ npm run test:watch
 
 ### Test Coverage
 
-Current test coverage includes:
+| Component  | Coverage |
+| ---------- | -------- |
+| Models     | 80%      |
+| Middleware | 69%      |
+| Routes     | 92%      |
+| **Total**  | **24%**  |
+
+### Test Suites
 
 - **Models**: User, Project, Task, DWGFile, Mapping, AuditLog
-- **Middleware**: Authentication (JWT validation, role-based access)
-- **Controllers**: Auth registration (disabled by default)
-
-## API Response Examples
-
-### Success Response
-
-```json
-{
-  "id": "proj-123",
-  "name": "My Project",
-  "description": "Project description",
-  "created_at": "2024-01-15T10:30:00.000Z"
-}
-```
-
-### Error Response
-
-```json
-{
-  "message": "Project not found"
-}
-```
+- **Middleware**: Authentication, RBAC
+- **Controllers**: Auth registration
 
 ## Development
 
 ```bash
-# Start development server with auto-reload
+# Start development server
 npm run dev
+
+# Start production server
+npm start
 
 # Run linting
 npm run lint
@@ -212,24 +228,23 @@ npm run lint:fix
 
 ```
 src/
-├── config/          # Database configuration
+├── config/           # Database configuration
 ├── controllers/     # API request handlers
-├── middleware/      # Express middleware (auth)
-├── models/          # Database models
-├── public/          # Static frontend
+├── middleware/      # Express middleware (auth, rbac)
+├── models/           # Database models
+├── public/          # Static frontend (HTML, JS, CSS)
 ├── routes/          # Route definitions
-└── server.js        # Entry point
+└── server.js       # Entry point
 
 tests/
 ├── controllers/     # Controller tests
 ├── models/          # Model tests
 └── __mocks__/      # Database mocks
 
-config.yaml          # General configuration
-credentials.yaml    # Sensitive credentials
+spec/                # API specifications
 ```
 
-## MVP Features
+## Features
 
 - [x] Project Management
 - [x] Task Management
@@ -237,9 +252,23 @@ credentials.yaml    # Sensitive credentials
 - [x] DWG-to-Task Mapping
 - [x] JWT Authentication
 - [x] Audit Logging
-- [x] User Roles (user, admin)
+- [x] RBAC (Admin, PM, Operativo, Cliente)
+- [x] Multi-user project assignment
 - [x] Disableable Registration
 - [x] Built-in Web UI
+
+## Documentation
+
+| File             | Description        |
+| ---------------- | ------------------ |
+| spec/SPEC.md     | Main specification |
+| spec/AUTH.md     | Authentication API |
+| spec/PROJECTS.md | Project API        |
+| spec/TASKS.md    | Task API           |
+| spec/DWG.md      | DWG file API       |
+| spec/MAPPINGS.md | Mapping API        |
+| spec/AUDIT.md    | Audit API          |
+| spec/RBAC.md     | RBAC specification |
 
 ## GitHub Best Practices
 
