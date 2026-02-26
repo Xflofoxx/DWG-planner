@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 const db = require("../config/database");
 
 function loadConfig() {
-  const configPath = path.join(__dirname, "..", "..", "config.yaml");
+  const configPath = path.join(__dirname, "..", "..", "credentials.yaml");
   const configFile = fs.readFileSync(configPath, "utf8");
   return yaml.parse(configFile);
 }

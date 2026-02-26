@@ -34,8 +34,3 @@ features:
   task_management: true
   audit_logging: true
   passwordless_auth: false
-
-demo:
-  admin_email: "demo@dwgplanner.local"
-  admin_password: "DemoAdmin2024!"
-  seed_data: true
